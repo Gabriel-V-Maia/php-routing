@@ -9,7 +9,7 @@ class Router
         $route = new Route($routeName,"GET", $callback);
 
         if (!$route) 
-            throw new Error("Error while creating router!");
+            throw new Error("Error while creating route");
             
 
         $this->routes[] = $route;
