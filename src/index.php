@@ -1,14 +1,23 @@
 <?php
 require_once "libs/routing.php";
 
-$Router = new Router();
+$router = new Router();
 
 $index = function()
 {
     http_response_code(200);
     header("Content-Type: text/html; charset=UTF-8");
-    include('index.html');
+    include('pages/index.html');
 };
 
-$Router->get("/", $index);
+$router->get("/php-routing/src/", $index);
+
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+try {
+    $router->dispatch($requestUri, $_SERVER['REQUEST_METHOD']);
+} catch (Exception $e) {
+    echo $e->getMessage();
+}
+
 ?>
