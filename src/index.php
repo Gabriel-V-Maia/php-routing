@@ -10,7 +10,15 @@ $index = function()
     include('pages/index.html');
 };
 
+$post = function()
+{
+    http_response_code(200);
+    header("Content-Type: text/html; charset=UTF-8");
+    include('pages/index.html');
+};
+
 $router->get("/", $index);
+$router->post("/form.php", $post);
 
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
