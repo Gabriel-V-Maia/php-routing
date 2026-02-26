@@ -7,7 +7,7 @@ class routeExpection extends \Exception
     public function __construct($message = self::DEFAULT_MESSAGE)
     {
         if (!empty($message))
-            $message = DEFAULT_MESSAGE . $message; 
+            $message = self::DEFAULT_MESSAGE . $message; 
         
         parent::__construct($message);
     }
@@ -25,6 +25,13 @@ class Router
         $this->routes[] = $route;
     } 
 
+   public function post(string $routeName, callable $callback)
+   {
+       $route = new Route($routeName, "POST", $callback);
+
+       $this->routes[] = $route;
+   }
+    
     public function dispatch(string $path, string $method)
     {
         $found = false;
