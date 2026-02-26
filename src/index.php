@@ -10,7 +10,7 @@ $index = function()
     include('pages/index.html');
 };
 
-$router->get("/php-routing/src/", $index);
+$router->get("/", $index);
 
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
