@@ -65,8 +65,55 @@ class Route
 
 class Router
 {
-    /** @var Route[] */
+    private const MIME_TYPES = [
+        'css'   => 'text/css',
+        'js'    => 'application/javascript',
+        'html'  => 'text/html',
+        'json'  => 'application/json',
+        'png'   => 'image/png',
+        'jpg'   => 'image/jpeg',
+        'jpeg'  => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'svg'   => 'image/svg+xml',
+        'ico'   => 'image/x-icon',
+        'woff'  => 'font/woff',
+        'woff2' => 'font/woff2',
+        'ttf'   => 'font/ttf',
+    ];
+
     protected array $routes = [];
+    private string $staticDir;
+
+    public function __construct(string $staticDir = __DIR__ . '/../pages')
+    {
+        $this->staticDir = rtrim($staticDir, '/');
+    }
+
+    private function serveStatic(string $path): bool
+    {
+        $filePath = $this->staticDir . $path;
+        $realFile = realpath($filePath);
+        $realBase = realpath($this->staticDir);
+
+        if ($realFile === false || $realBase === false)
+            return false;
+
+        if (!str_starts_with($realFile, $realBase))
+            return false;
+
+        if (!is_file($realFile))
+            return false;
+
+        $ext      = strtolower(pathinfo($realFile, PATHINFO_EXTENSION));
+        $mime     = self::MIME_TYPES[$ext] ?? 'application/octet-stream';
+        $charset  = str_starts_with($mime, 'text/') ? '; charset=UTF-8' : '';
+
+        http_response_code(200);
+        header("Content-Type: {$mime}{$charset}");
+        header('Content-Length: ' . filesize($realFile));
+        readfile($realFile);
+        return true;
+    }
 
     private function addRoute(string $path, string $method, callable $callback): self
     {
@@ -104,10 +151,12 @@ class Router
         $method = strtoupper($method);
         $path   = rtrim(parse_url($path, PHP_URL_PATH), '/') ?: '/';
 
+        if ($method === 'GET' && $this->serveStatic($path))
+            return;
+
         foreach ($this->routes as $route) {
             if ($route->method === $method && $route->matches($path)) {
-                $params = $route->extractParams($path);
-                $route->run($params);
+                $route->run($route->extractParams($path));
                 return;
             }
         }
@@ -127,8 +176,9 @@ class Router
 
     public function run(): void
     {
-        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $path   = $_SERVER['REQUEST_URI']    ?? '/';
-        $this->dispatch($path, $method);
+        $this->dispatch(
+            $_SERVER['REQUEST_URI']    ?? '/',
+            $_SERVER['REQUEST_METHOD'] ?? 'GET'
+        );
     }
 }
